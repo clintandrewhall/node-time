@@ -82,9 +82,20 @@ class Time
     obj->Set(String::NewSymbol("dayOfYear"), Integer::New(timeinfo->tm_yday) );
     obj->Set(String::NewSymbol("isDaylightSavings"), Boolean::New(timeinfo->tm_isdst > 0) );
 
+    #if defined(HAVE_STRUCT_TM_GMTOFF)
     // Only available with glibc's "tm" struct
     obj->Set(String::NewSymbol("gmtOffset"), Integer::New(timeinfo->tm_gmtoff) );
     obj->Set(String::NewSymbol("timezone"), String::NewSymbol(timeinfo->tm_zone) );
+    # elif defined(HAVE_TIMEZONE_ALTZONE)
+    long scd;
+    if(tm.tm_isdst > 0)
+      scd = altzone;
+    else
+      scd = timezone;
+    
+      obj->Set(String::NewSymbol("gmtOffset"), Integer::New(abs(scd)));
+      obj->Set(String::NewSymbol("timezone"), Integer::New(abs(scd)));
+    #endif
 
     return scope.Close(obj);
   }
